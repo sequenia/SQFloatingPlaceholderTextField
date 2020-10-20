@@ -8,18 +8,18 @@
 import Foundation
 
 // MARK: - Class
-class SQEmailValidator: SQTextFieldValidator {
+open class SQEmailValidator: SQTextFieldValidator {
    
 // MARK: - Properties
-    var required: Bool
+    open var required: Bool
     
 // MARK: - Init
-    init(required: Bool) {
+    public init(required: Bool) {
         self.required = required
     }
     
 // MARK: - Check
-    func check(_ text: String) -> TextValidationResult {
+    public func check(_ text: String) -> TextValidationResult {
         
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)

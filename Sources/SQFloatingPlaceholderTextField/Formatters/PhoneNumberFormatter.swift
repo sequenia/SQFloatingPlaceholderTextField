@@ -8,14 +8,14 @@
 import UIKit
 
 // MARK: - Class
-class SQPhoneNumberFormatter: SQTextFieldFormatter {
+open class SQPhoneNumberFormatter: SQTextFieldFormatter {
     
 // MARK: - Properties
-    var onlyString: String?
-    var prefix: String?
+    open var onlyString: String?
+    open var prefix: String?
     
 // MARK: - Check
-    func check(_ text: String) -> String {
+    public func check(_ text: String) -> String {
         let obj = SHSPhoneNumberFormatter()
         obj.addOutputPattern(" ### ### ## ##", forRegExp: "^*[0-689]\\d*$")
         obj.prefix = "+" + (self.prefix ?? "7")

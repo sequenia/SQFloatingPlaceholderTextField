@@ -26,16 +26,15 @@ public enum TextValidationResult {
 //MARK: - Validation Errors Enum
 public struct ValidationErrors {
     
-    var requiredError: String    = "Поле не может быть пустым"
-    var wrongFormatError: String = "Неверный формат"
+    public var requiredError: String    = "Поле не может быть пустым"
+    public var wrongFormatError: String = "Неверный формат"
     
-    init(){}
+    public init(){}
     
-    init(requiredError: String,
-         wrongFormatError: String) {
+    public init(requiredError: String,
+                wrongFormatError: String) {
         self.requiredError = requiredError
         self.wrongFormatError = wrongFormatError
     }
+    
 }
-
-

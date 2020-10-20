@@ -14,7 +14,7 @@ open class SQTextFieldBaseValidator: SQTextFieldValidator {
     open var required: Bool
 
 //MARK: - Init
-    init(required: Bool) {
+    public init(required: Bool) {
         self.required = required
     }
 

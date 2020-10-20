@@ -8,18 +8,18 @@
 import Foundation
 
 // MARK: - Class
-class SQPhoneNumberValidator: SQTextFieldValidator {
+open class SQPhoneNumberValidator: SQTextFieldValidator {
     
 // MARK: - Properties
-    var required: Bool
+    open var required: Bool
     
 // MARK: - Init
-    init(required: Bool) {
+    public init(required: Bool) {
         self.required = required
     }
    
 // MARK: - Check
-    func check(_ text: String) -> TextValidationResult {
+    public func check(_ text: String) -> TextValidationResult {
         let phoneRegEx = "^\\+?[78][-\\(\\ ]?\\d{3}\\)?-?\\ ?\\d{3}-?\\ ?\\d{2}-?\\ ?\\d{2}$"
         let phoneTest = NSPredicate(format:"SELF MATCHES %@", phoneRegEx)
         let validate = phoneTest.evaluate(with: text)
