@@ -14,6 +14,9 @@ open class SQTextFieldBaseFormatter: SQTextFieldFormatter {
     public var onlyString: String?
     public var prefix: String?
     
+// MARK: - Init
+    public init() {}
+    
 // MARK: - Check
     public func check(_ text: String) -> String {
         self.onlyString = text

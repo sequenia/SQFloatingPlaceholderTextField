@@ -14,6 +14,9 @@ open class SQPhoneNumberFormatter: SQTextFieldFormatter {
     open var onlyString: String?
     open var prefix: String?
     
+// MARK: - Init
+    public init() {}
+    
 // MARK: - Check
     public func check(_ text: String) -> String {
         let obj = SHSPhoneNumberFormatter()
