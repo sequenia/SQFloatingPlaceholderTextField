@@ -7,16 +7,20 @@
 
 import UIKit
 
+// MARK: - Constants
 fileprivate struct Constants {
     
-    static let kEnglishPrefix = "en"
     static let kClearButtonWidth: CGFloat = 30
 }
 
 // MARK: - Input Data Delegate
-public protocol SQInputDataDelegate: class {
+@objc public protocol SQInputDataDelegate: class {
 
-    func updateInputData(_ text: String?)
+    @objc optional func inputViewShouldBeginEditing(_ textFieldView: FloatingPlaceholderInputView?) -> Bool
+    @objc optional func inputViewDidBeginEditing(_ textFieldView: FloatingPlaceholderInputView?, validate: Bool, error: String?)
+    @objc optional func inputViewDidChange(_ textFieldView: FloatingPlaceholderInputView?, validate: Bool, error: String?)
+    @objc optional func inputViewDidEndEditing(_ textFieldView: FloatingPlaceholderInputView?, validate: Bool, error: String?)
+    @objc optional func inputViewDoneButtonClicked()
 }
 
 // MARK: - FloatingPlaceholderInputView class
@@ -26,7 +30,7 @@ open class FloatingPlaceholderInputView: UIView {
 // MARK: - Outlets
     @IBOutlet var contentView: UIView!
     @IBOutlet private weak var placeholderLabel: UILabel!
-    @IBOutlet private weak var maskedTextField: SwiftMaskTextfield!
+    @IBOutlet private weak var sqTextField: SQTextfield!
     @IBOutlet private weak var clearButton: UIButton!
     @IBOutlet private weak var separatorView: UIView!
     
@@ -34,21 +38,25 @@ open class FloatingPlaceholderInputView: UIView {
     
 // MARK: - Text
     open var text: String? {
-        set { self.maskedTextField.text = newValue }
-        get { return self.maskedTextField.text }
+        set { self.sqTextField.text = newValue }
+        get { return self.sqTextField.text }
     }
 
+    open var clearText: String? {
+        get { self.formatter?.onlyString }
+    }
+    
 // MARK: - UI Properties / Colors
     @IBInspectable
     open var inputTintColor: UIColor {
-        set { self.maskedTextField.tintColor = newValue }
-        get { return self.maskedTextField.tintColor }
+        set { self.sqTextField.tintColor = newValue }
+        get { return self.sqTextField.tintColor }
     }
     
     @IBInspectable
     open var textColor: UIColor {
-        set { self.maskedTextField.textColor = newValue }
-        get { return self.maskedTextField.textColor ?? .black }
+        set { self.sqTextField.textColor = newValue }
+        get { return self.sqTextField.textColor ?? .black }
     }
     
     @IBInspectable
@@ -82,30 +90,13 @@ open class FloatingPlaceholderInputView: UIView {
         set { self.clearButton.setImage(newValue, for: .normal) }
         get { return self.clearButton.imageView?.image }
     }
-    
-// MARK: - Pattern
-    /* Pattern Rules
-     * Letters And Digits Replacement Char: "*"
-     * Any Letter Replecement Char: "@"
-     * Lowercase Letter Replecement Char: "a"
-     * Uppercase Letter Replecement Char: "A"
-     * Digits Replecement Char: "#"
-     */
-    @IBInspectable
-    open var formatPattern: String = "" {
-        didSet { self.maskedTextField.formatPattern = self.formatPattern }
-    }
-    
-// MARK: - Prefix
-    @IBInspectable
-    open var prefix: String = ""
         
 // MARK: - Fonts
     open var textFont: UIFont {
-        set { self.maskedTextField.font = newValue
+        set { self.sqTextField.font = newValue
               self.placeholderLabel.font = newValue
         }
-        get { return self.maskedTextField.font ?? UIFont.systemFont(ofSize: 16) }
+        get { return self.sqTextField.font ?? UIFont.systemFont(ofSize: 16) }
     }
     
     open var placeholderFont: UIFont {
@@ -116,6 +107,8 @@ open class FloatingPlaceholderInputView: UIView {
 // MARK: - Data
     var delegate: SQInputDataDelegate?
     var type: SQTextFieldType?
+    var validator: SQTextFieldValidator?
+    var formatter: SQTextFieldFormatter?
     
 // MARK: - Init
     override public init(frame: CGRect) {
@@ -140,43 +133,48 @@ open class FloatingPlaceholderInputView: UIView {
         super.awakeFromNib()
         self.clearButton.isHidden = true
         self.placeholderLabel.isHidden = true
-        self.maskedTextField.delegate = self
-        self.maskedTextField.addTarget(self, action: #selector(textFieldDidChange),
-                                       for: .editingChanged)
+        self.sqTextField.delegate = self
+        self.sqTextField.addTarget(self, action: #selector(sqTextFieldDidChange), for: .editingChanged)
     }
     
 // MARK: - Configure
     open func configure(type: SQTextFieldType,
                         delegate: SQInputDataDelegate?,
                         value: String? = nil,
-                        placeholder: String) {
+                        placeholder: String,
+                        validator: SQTextFieldValidator?,
+                        formatter: SQTextFieldFormatter?) {
         self.delegate = delegate
+        self.formatter = formatter != nil ? formatter : SQTextFieldBaseFormatter()
+        self.validator = validator != nil ? validator : SQTextFieldBaseValidator(required: false)
+        self.setType(type)
         self.setPlaceholder(placeholder)
         self.setTextFieldText(value, appearPlaceholder: false)
-        self.setType(type)
     }
-// MARK: - Setters / Placeholder
+    
+// MARK: - Set Placeholder
     private func setPlaceholder(_ placeholder: String) {
         self.placeholderLabel.text = placeholder
-        self.maskedTextField.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.font: self.textFont, .foregroundColor: self.placeholderColor])
+        self.sqTextField.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.font: self.textFont, .foregroundColor: self.placeholderColor])
     }
-// MARK: - Type
+    
+// MARK: - Set Type
     private func setType(_ type: SQTextFieldType) {
         self.type = type
         switch type {
         case .cardNumber, .phoneNumber, .numbers:
             self.addDoneButtonOnKeyboard()
         case .email, .password:
-            self.maskedTextField.languagePrefix = Constants.kEnglishPrefix
+            self.sqTextField.languageCode = LanguageCode.en
         default:
             break
         }
         
-        self.maskedTextField.keyboardType = type.keyboardType
-        self.maskedTextField.autocapitalizationType = type.capitalization
+        self.sqTextField.keyboardType = type.keyboardType
+        self.sqTextField.autocapitalizationType = type.capitalization
     }
     
-// MARK: - Text
+// MARK: - Set Text
     private func setTextFieldText(_ text: String?, appearPlaceholder: Bool) {
         guard let fieldText = text, fieldText != "" else {
             self.clearButton.isHidden = true
@@ -184,55 +182,46 @@ open class FloatingPlaceholderInputView: UIView {
         self.text = fieldText
         self.clearButton.isHidden = false
         self.appearPlaceholder(animate: appearPlaceholder)
-        self.delegate?.updateInputData(self.text)
     }
     
 // MARK: - Actions
     @IBAction func onClearButtonClicked(_ sender: UIButton) {
-        self.clearTextField()
+        self.clearTextField(resign: true)
+        self.textFieldDidEndEditing(self.sqTextField)
     }
     
-    @objc func textFieldDidChange() {
+    @objc func sqTextFieldDidChange() {
         
-        if self.text?.count != 0 {
+        if (self.clearText?.count ?? 0) + (self.formatter?.prefix?.count ?? 0) != 0 {
             if self.placeholderLabel.isHidden == true {
                 self.appearPlaceholder(animate: true)
             }
         }
         
-        if self.text?.count == 0 {
-            self.placeholderLabel.isHidden = true
-        }
-        
-        if self.prefix != "", self.text?.count ?? 0 <= self.prefix.count {
-            self.setTextFieldText(self.prefix, appearPlaceholder: false)
+        if (self.clearText?.isEmpty ?? false)  {
+            self.clearTextField(resign: false)
         }
 
-        if self.text != "" {
+        if self.clearText != "" {
             self.clearButton.isHidden = false
         } else {
             self.clearButton.isHidden = true
         }
         
-        if self.text?.count ?? 0 > self.maskedTextField.maxLength {
-            if let text = self.text {
-                self.text = String(text.dropLast())
-                return
-            }
-        }
-        
-        self.delegate?.updateInputData(self.text)
+        self.validateOnChangeText()
     }
     
-    private func clearTextField() {
-        self.text = nil
+    private func clearTextField(resign: Bool) {
+        self.text?.removeAll()
+        self.formatter?.onlyString?.removeAll()
         self.placeholderLabel.isHidden = true
         self.clearButton.isHidden = true
-        self.maskedTextField.resignFirstResponder()
-        self.delegate?.updateInputData(nil)
+        if resign {
+            self.sqTextField.resignFirstResponder()
+        }
     }
     
-// MARK: - Animate Placeholder Appearance
+// MARK: - Placeholder Appearance
     private func appearPlaceholder(animate: Bool) {
         if !animate {
             self.placeholderLabel.isHidden = false
@@ -249,30 +238,83 @@ open class FloatingPlaceholderInputView: UIView {
             self.placeholderLabel.frame = rect
         }
     }
+    
 }
 
-// MARK: - UITextField Delegate
+// MARK: - TextField Delegate
 extension FloatingPlaceholderInputView: UITextFieldDelegate {
+
+    public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        return self.delegate?.inputViewShouldBeginEditing?(self) ?? true
+    }
     
     public func textFieldDidBeginEditing(_ textField: UITextField) {
-        if self.prefix != "" {
-            if self.text == "" {
-                self.setTextFieldText(self.prefix, appearPlaceholder: true)
-            }
+        self.validateOnBeginEditing()
+    }
+
+    public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let nsString = textField.text as NSString?
+        let textReplase = nsString?.replacingCharacters(in: range, with: string)
+        self.text = self.formatter?.check(textReplase ?? "") ?? textReplase
+        self.sqTextFieldDidChange()
+        return false
+    }
+    
+    public func textFieldDidEndEditing(_ textField: UITextField) {
+        if self.clearText?.isEmpty ?? false  {
+            self.clearTextField(resign: true)
         }
+        self.validateOnEndEditing()
     }
     
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
-        self.delegate?.updateInputData(self.text)
+        self.delegate?.inputViewDoneButtonClicked?()
         return true
     }
+
+}
+
+//  MARK:- Validation
+extension FloatingPlaceholderInputView {
     
-    public func textFieldDidEndEditing(_ textField: UITextField) {
-        if textField.text == "" || textField.text == self.prefix  {
-            self.clearTextField()
+    func validateOnBeginEditing() {
+        switch self.validator?.check(self.text ?? "") {
+        case .success:
+            self.delegate?.inputViewDidBeginEditing?(self, validate: true, error: nil)
+            break
+        case let .failure(info)?:
+            self.delegate?.inputViewDidBeginEditing?(self, validate: false, error: info)
+            break
+        default:
+            break
         }
-        self.delegate?.updateInputData(textField.text)
+    }
+    
+    func validateOnChangeText() {
+        switch self.validator?.check(self.text ?? "") {
+        case .success:
+            self.delegate?.inputViewDidChange?(self, validate: true, error: nil)
+            break
+        case let .failure(info)?:
+            self.delegate?.inputViewDidChange?(self, validate: false, error: info)
+            break
+        default:
+            break
+        }
+    }
+    
+    func validateOnEndEditing() {
+        switch self.validator?.check(self.text ?? "") {
+        case .success:
+            self.delegate?.inputViewDidEndEditing?(self, validate: true, error: nil)
+            break
+        case let .failure(info)?:
+            self.delegate?.inputViewDidEndEditing?(self, validate: false, error: info)
+            break
+        default:
+            break
+        }
     }
     
 }
@@ -294,15 +336,12 @@ extension FloatingPlaceholderInputView {
         doneToolbar.items = [flexSpace, doneButton]
         doneToolbar.sizeToFit()
         
-        self.maskedTextField.inputAccessoryView = doneToolbar
-        self.maskedTextField.returnKeyType = .done
-    }
-    
-    private func removeDoneButton() {
-        self.maskedTextField.inputAccessoryView = UIView()
+        self.sqTextField.inputAccessoryView = doneToolbar
+        self.sqTextField.returnKeyType = .done
     }
     
     @objc func doneButtonAction() {
-        _ = self.textFieldShouldReturn(self.maskedTextField)
+        _ = self.textFieldShouldReturn(self.sqTextField)
     }
+    
 }

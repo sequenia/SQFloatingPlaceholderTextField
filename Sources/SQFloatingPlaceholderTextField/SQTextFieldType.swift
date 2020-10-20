@@ -53,18 +53,5 @@ public enum SQTextFieldType {
             return .none
         }
     }
-    
-//// MARK: - Mask
-//    var mask: String {
-//        switch self {
-//        case .cardNumber:
-//            return "#### #### #### ####"
-//        case .phoneNumber:
-//            return "+# ### ### ## ##"
-//        default:
-//            return ""
-//        }
-//    }
-
 }
 
