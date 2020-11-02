@@ -15,7 +15,7 @@ let package = Package(
     targets: [
         .target(
             name: "SQFloatingPlaceholderTextField",
-            dependencies: [],
+            exclude: ["LICENSE_Component", "README_Component"],
             resources: [.process("Resources")]),
         .testTarget(
             name: "SQFloatingPlaceholderTextFieldTests",
