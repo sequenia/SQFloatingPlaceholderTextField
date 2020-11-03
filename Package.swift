@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "SQFloatingPlaceholderTextField",
-    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v12)],
     products: [
         .library(
             name: "SQFloatingPlaceholderTextField",
@@ -15,7 +15,6 @@ let package = Package(
     targets: [
         .target(
             name: "SQFloatingPlaceholderTextField",
-            exclude: ["LICENSE_Component", "README_Component"],
             resources: [.process("Resources")]),
         .testTarget(
             name: "SQFloatingPlaceholderTextFieldTests",
