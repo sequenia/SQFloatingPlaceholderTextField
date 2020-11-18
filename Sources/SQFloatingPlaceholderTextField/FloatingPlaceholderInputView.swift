@@ -24,7 +24,7 @@ fileprivate struct Constants {
 }
 
 // MARK: - FloatingPlaceholderInputView class
-open class FloatingPlaceholderInputView: UIView {
+@IBDesignable open class FloatingPlaceholderInputView: UIView {
   
     
 // MARK: - Outlets
