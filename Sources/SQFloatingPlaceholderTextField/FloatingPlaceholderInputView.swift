@@ -29,8 +29,8 @@ fileprivate struct Constants {
     
 // MARK: - Outlets
     @IBOutlet var contentView: UIView!
+    @IBOutlet open weak var sqTextField: SQTextfield!
     @IBOutlet private weak var placeholderLabel: UILabel!
-    @IBOutlet private weak var sqTextField: SQTextfield!
     @IBOutlet private weak var clearButton: UIButton!
     @IBOutlet private weak var separatorView: UIView!
     
