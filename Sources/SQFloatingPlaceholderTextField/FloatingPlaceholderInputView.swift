@@ -164,8 +164,10 @@ fileprivate struct Constants {
         switch type {
         case .cardNumber, .phoneNumber, .numbers:
             self.addDoneButtonOnKeyboard()
-        case .email, .password:
+        case .email:
             self.sqTextField.languageCode = LanguageCode.en
+        case .password:
+            self.sqTextField.isSecureTextEntry = true
         default:
             break
         }
