@@ -161,6 +161,7 @@ fileprivate struct Constants {
 // MARK: - Set Type
     private func setType(_ type: SQTextFieldType) {
         self.type = type
+        
         switch type {
         case .cardNumber, .phoneNumber, .numbers:
             self.addDoneButtonOnKeyboard()
