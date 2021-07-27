@@ -14,7 +14,7 @@ fileprivate struct Constants {
 }
 
 // MARK: - Input Data Delegate
-@objc public protocol SQInputDataDelegate: class {
+@objc public protocol SQInputDataDelegate: AnyObject {
 
     @objc optional func inputViewShouldBeginEditing(_ textFieldView: FloatingPlaceholderInputView?) -> Bool
     @objc optional func inputViewDidBeginEditing(_ textFieldView: FloatingPlaceholderInputView?, validate: Bool, error: String?)
@@ -28,7 +28,7 @@ fileprivate struct Constants {
   
     
 // MARK: - Outlets
-    @IBOutlet var contentView: UIView!
+    @IBOutlet open var contentView: UIView!
     @IBOutlet open weak var sqTextField: SQTextfield!
     @IBOutlet private weak var placeholderLabel: UILabel!
     @IBOutlet private weak var clearButton: UIButton!
@@ -70,6 +70,12 @@ fileprivate struct Constants {
         set { self.separatorView.backgroundColor = newValue }
         get { return self.separatorView.backgroundColor ?? .gray }
     }
+    
+    @IBInspectable
+    open var keyboardToolTitle: String?
+    
+    @IBInspectable
+    open var keyboardToolTitleColor: UIColor?
     
 // MARK: - Clear Button
     @IBInspectable
@@ -113,11 +119,13 @@ fileprivate struct Constants {
 // MARK: - Init
     override public init(frame: CGRect) {
         super.init(frame: frame)
+        
         self.construct()
     }
     
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
+        
         self.construct()
     }
     
@@ -131,6 +139,7 @@ fileprivate struct Constants {
 // MARK: - Life Cycle
     override public func awakeFromNib() {
         super.awakeFromNib()
+        
         self.clearButton.isHidden = true
         self.placeholderLabel.isHidden = true
         self.sqTextField.delegate = self
@@ -257,8 +266,8 @@ extension FloatingPlaceholderInputView: UITextFieldDelegate {
 
     public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let nsString = textField.text as NSString?
-        let textReplase = nsString?.replacingCharacters(in: range, with: string)
-        self.text = self.formatter?.check(textReplase ?? "") ?? textReplase
+        let textReplace = nsString?.replacingCharacters(in: range, with: string)
+        self.text = self.formatter?.check(textReplace ?? "") ?? textReplace
         self.sqTextFieldDidChange()
         return false
     }
@@ -333,8 +342,13 @@ extension FloatingPlaceholderInputView {
         
         let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
-        let doneButton = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(self.doneButtonAction))
-        doneButton.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 16, weight: .medium)], for: .normal)
+        let doneButton = UIBarButtonItem(title: self.keyboardToolTitle ?? "Done", style: .plain, target: self, action: #selector(self.doneButtonAction))
+        doneButton.setTitleTextAttributes(
+            [
+                .font: UIFont.systemFont(ofSize: 16, weight: .medium),
+                .foregroundColor: self.keyboardToolTitleColor ?? .black
+            ],
+            for: .normal)
         
         doneToolbar.items = [flexSpace, doneButton]
         doneToolbar.sizeToFit()
