@@ -146,6 +146,10 @@ fileprivate struct Constants {
         self.sqTextField.addTarget(self, action: #selector(sqTextFieldDidChange), for: .editingChanged)
     }
     
+    open func prepareForReuse() {
+        self.clearTextField(resign: false)
+    }
+    
 // MARK: - Configure
     open func configure(type: SQTextFieldType,
                         delegate: SQInputDataDelegate?,
