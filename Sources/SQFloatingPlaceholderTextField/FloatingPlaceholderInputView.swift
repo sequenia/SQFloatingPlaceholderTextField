@@ -274,6 +274,7 @@ extension FloatingPlaceholderInputView: UITextFieldDelegate {
         let textReplace = nsString?.replacingCharacters(in: range, with: string)
         self.text = self.formatter?.check(textReplace ?? "") ?? textReplace
         self.sqTextFieldDidChange()
+        self.setCursorPosition(textField: textField, position: (range.location + string.count))
         return false
     }
     
@@ -338,6 +339,12 @@ extension FloatingPlaceholderInputView {
 
 // MARK: - Add Done Button
 extension FloatingPlaceholderInputView {
+    
+    private func setCursorPosition(textField: UITextField, position: Int) {
+        guard let position = textField.position(from: textField.beginningOfDocument, offset: position) else { return }
+        
+        textField.selectedTextRange = textField.textRange(from: position, to: position)
+    }
     
     private func addDoneButtonOnKeyboard() {
         
