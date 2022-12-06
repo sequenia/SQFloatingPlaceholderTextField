@@ -15,7 +15,7 @@ let package = Package(
     targets: [
         .target(
             name: "SQFloatingPlaceholderTextField",
-            resources: [.process("Resources")]),
+        ),
         .testTarget(
             name: "SQFloatingPlaceholderTextFieldTests",
             dependencies: ["SQFloatingPlaceholderTextField"]),
